@@ -1,0 +1,25 @@
+{
+  "name": "video-ai-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-powered video and audio creation platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "shared/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter web dev & pnpm --filter api dev",
+    "build": "pnpm --filter web build && pnpm --filter api build",
+    "lint": "pnpm --filter web lint && pnpm --filter api lint",
+    "type-check": "pnpm --filter web type-check && pnpm --filter api type-check"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
+

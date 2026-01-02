@@ -1,0 +1,200 @@
+// Prisma Schema for AI Video Creation Platform
+// Database: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model (basic auth)
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // bcrypt hashed
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  projects   Project[]
+  characters Character[]
+  voices     Voice[]
+  jobs       Job[]
+
+  @@map("users")
+}
+
+// Project model
+model Project {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  description String?
+  timeline    Json     // Timeline JSON structure (see Timeline format)
+  settings    Json     // ProjectSettings JSON
+  format      String   // "9:16" | "16:9" | "1:1"
+  status      String   @default("draft") // "draft" | "processing" | "completed" | "failed"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clips   Clip[]
+  scenes  Scene[]
+  jobs    Job[]
+  renders Render[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("projects")
+}
+
+// Clip model
+model Clip {
+  id          String   @id @default(uuid())
+  projectId   String
+  sourceType  String   // "url" | "upload" | "generated"
+  sourceUrl   String?
+  filePath    String   // S3 path
+  startTime   Float    @default(0)
+  endTime     Float
+  transformations Json @default("[]") // Array of Transformation objects
+  audioTrack   Json?   // AudioTrack JSON
+  subtitles    Json?   // Array of SubtitleTrack JSON
+  metadata     Json    // ClipMetadata JSON
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("clips")
+}
+
+// Scene model
+model Scene {
+  id        String   @id @default(uuid())
+  projectId String
+  clips     Json     // Array of clip IDs
+  transitions Json   @default("[]") // Array of Transition objects
+  duration  Float
+  order     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([projectId, order])
+  @@map("scenes")
+}
+
+// Character model
+model Character {
+  id              String   @id @default(uuid())
+  userId          String
+  name            String
+  type            String   // "historical" | "avatar" | "custom"
+  faceModel       String?  // Path to model file
+  faceEmbeddingUrl String? // S3 path to face embedding (from detection)
+  voiceProfile    String?  // Voice embedding path
+  appearanceConfig Json    // AppearanceConfig JSON
+  metadata        Json?    // Face detection metadata (bounding boxes, tracks, etc.)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@map("characters")
+}
+
+// Voice model
+model Voice {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  type        String   // "cloned" | "preset" | "synthetic"
+  embedding   Json?    // Voice embedding vector (array of numbers)
+  embeddingUrl String? // S3 path to stored embedding file (for large embeddings)
+  sourceAudio String? // S3 path to reference audio
+  modelVersion String? // TTS model version used (e.g., "xtts-v2")
+  language    String
+  emotion     String?
+  style       String?
+  metadata    Json?    // Additional voice metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([language])
+  @@index([type])
+  @@map("voices")
+}
+
+// Job model
+model Job {
+  id             String    @id @default(uuid())
+  userId          String
+  projectId       String?
+  type            String    // JobType enum
+  status          String    @default("queued") // "queued" | "processing" | "completed" | "failed"
+  input           Json      // Job input parameters
+  output          Json?     // Job output (includes modelVersion)
+  error           String?
+  progress        Int       @default(0) // 0-100
+  idempotencyKey  String?   @unique // Prevents duplicate GPU work
+  createdAt       DateTime  @default(now())
+  startedAt       DateTime?
+  completedAt     DateTime?
+
+  // Relations
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  renders Render[]
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([status])
+  @@index([type])
+  @@index([idempotencyKey])
+  @@map("jobs")
+}
+
+// Render model
+model Render {
+  id           String   @id @default(uuid())
+  projectId   String
+  jobId        String
+  format       String   // "9:16" | "16:9" | "1:1"
+  resolution   String   // e.g., "1920x1080"
+  filePath     String   // S3 path to rendered video
+  thumbnailPath String? // S3 path to thumbnail
+  duration     Float
+  fileSize     Int      // Bytes
+  status       String   @default("processing") // "processing" | "completed" | "failed"
+  modelVersion String?  // AI model version used (for reproducibility)
+  watermark    Boolean  @default(false) // Whether watermark was applied
+  createdAt    DateTime @default(now())
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  job     Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([jobId])
+  @@index([status])
+  @@map("renders")
+}
+
