@@ -8,6 +8,7 @@ import type { Job as BullJob } from "bullmq";
 import { Redis } from "ioredis";
 import { FastifyInstance } from "fastify";
 import type { JobType } from "@shared/types/jobs";
+import { updateJobStatus } from "./jobService.js";
 
 // Worker endpoints configuration
 const WORKER_ENDPOINTS: Record<JobType, string> = {
@@ -81,8 +82,46 @@ export function createWorkerProcessor(fastify: FastifyInstance, redis: Redis) {
     fastify.log.info(`Job ${job.id} completed`);
   });
 
-  worker.on("failed", (job: BullJob | undefined, err: Error) => {
-    fastify.log.error(`Job ${job?.id} failed: ${err.message}`);
+  worker.on("failed", async (job: BullJob | undefined, err: Error) => {
+    if (!job) {
+      fastify.log.error(`Job failed but job data is missing: ${err.message}`);
+      return;
+    }
+
+    const jobId = job.data?.jobId || job.id;
+    const errorMessage = err.message || "Job processing failed";
+
+    fastify.log.error(`Job ${jobId} failed: ${errorMessage}`);
+
+    try {
+      // Update database job status
+      await updateJobStatus(fastify, jobId, {
+        progress: 0,
+        status: "failed",
+        error: errorMessage,
+      });
+
+      // Broadcast WebSocket update
+      const wsConnections = (fastify as any).wsConnections;
+      if (wsConnections) {
+        wsConnections.forEach((socket: any) => {
+          if (socket.readyState === 1) {
+            // WebSocket.OPEN
+            socket.send(
+              JSON.stringify({
+                type: "job_update",
+                jobId: jobId,
+                progress: 0,
+                status: "failed",
+                error: errorMessage,
+              })
+            );
+          }
+        });
+      }
+    } catch (updateError: any) {
+      fastify.log.error(`Failed to update job status for ${jobId}: ${updateError.message}`);
+    }
   });
 
   worker.on("error", (err: Error) => {

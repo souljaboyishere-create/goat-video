@@ -99,6 +99,14 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
     return { user };
   });
+
+  // Google OAuth (Not implemented yet)
+  fastify.get("/google", async (request, reply) => {
+    return reply.code(501).send({ 
+      error: "Google OAuth is not implemented yet",
+      message: "Please use email and password authentication" 
+    });
+  });
 }
 
 // Add authenticate decorator

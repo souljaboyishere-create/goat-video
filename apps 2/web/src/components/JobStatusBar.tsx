@@ -49,17 +49,17 @@ export default function JobStatusBar({ jobs, onDeleteJob }: JobStatusBarProps) {
       {validActiveJobs.length > 0 && (
         <div className="mb-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-bold text-accent-primary whitespace-nowrap">Processing:</span>
+            <span className="text-xs font-bold text-amber whitespace-nowrap">Processing:</span>
             {validActiveJobs.map((job) => (
-              <div key={job.id} className="flex items-center gap-2 glass border border-accent-primary/30 px-2 py-1 rounded-lg">
-                <span className="text-xs whitespace-nowrap font-medium">{job.type}</span>
+              <div key={job.id} className="flex items-center gap-2 bg-charcoal/60 border border-amber/30 px-2 py-1 rounded-lg">
+                <span className="text-xs whitespace-nowrap font-medium text-cream">{job.type}</span>
                 <div className="w-16 bg-black/30 rounded-full h-1.5 overflow-hidden">
                   <div
-                    className="accent-gradient h-full rounded-full transition-all"
-                    style={{ width: `${job.progress}%` }}
+                    className="bg-amber h-full rounded-full transition-all"
+                    style={{ width: `${Math.max(job.progress || 0, 2)}%` }}
                   />
                 </div>
-                <span className="text-xs whitespace-nowrap font-medium">{job.progress}%</span>
+                <span className="text-xs whitespace-nowrap font-medium text-cream">{job.progress || 0}%</span>
                 {(job.status === "queued" || (job.status === "processing" && job.progress === 0)) && (
                   <button
                     onClick={() => handleDelete(job.id)}

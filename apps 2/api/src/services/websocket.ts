@@ -1,6 +1,12 @@
 import { FastifyInstance } from "fastify";
 
+// Store WebSocket connections for broadcasting
+const wsConnections = new Set<any>();
+
 export function setupWebSocket(fastify: FastifyInstance) {
+  // Store connections on Fastify instance for access in routes
+  (fastify as any).wsConnections = wsConnections;
+
   fastify.get("/ws", { websocket: true }, (connection, req) => {
     // Authenticate WebSocket connection
     const token = req.url?.split("token=")[1];
@@ -18,6 +24,9 @@ export function setupWebSocket(fastify: FastifyInstance) {
       return;
     }
 
+    // Add connection to set
+    wsConnections.add(connection.socket);
+
     connection.socket.on("message", (message: Buffer) => {
       // Handle incoming messages if needed
       try {
@@ -30,6 +39,7 @@ export function setupWebSocket(fastify: FastifyInstance) {
 
     connection.socket.on("close", () => {
       console.log("WebSocket connection closed");
+      wsConnections.delete(connection.socket);
     });
   });
 }

@@ -73,7 +73,7 @@ export default function EditorToolbar({ projectId, onVideoAdded }: EditorToolbar
         <div className="flex items-center gap-1.5 flex-wrap">
           <button
             onClick={() => setShowDownloadModal(true)}
-            className="accent-gradient text-black px-2 py-1 rounded text-xs font-semibold transition-all hover:scale-105 flex items-center gap-1 shadow-md"
+            className="bg-amber text-charcoal px-2 py-1 rounded text-xs font-semibold transition-all hover:bg-amber-dark hover:scale-105 flex items-center gap-1 shadow-md"
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -164,7 +164,7 @@ export default function EditorToolbar({ projectId, onVideoAdded }: EditorToolbar
                 value={videoUrl}
                 onChange={(e) => setVideoUrl(e.target.value)}
                 placeholder="Paste video URL..."
-                className="w-full px-3 py-2 glass border border-white/10 text-white rounded focus:border-accent-primary focus:outline-none text-sm"
+                className="w-full px-3 py-2 bg-charcoal/80 border border-cream/20 text-cream placeholder:text-cream/50 rounded focus:border-amber focus:outline-none text-sm"
                 onKeyPress={(e) => e.key === "Enter" && handleDownloadVideo()}
               />
               <p className="text-[10px] text-gray-400 mt-1">
@@ -176,7 +176,7 @@ export default function EditorToolbar({ projectId, onVideoAdded }: EditorToolbar
               <button
                 onClick={handleDownloadVideo}
                 disabled={loading || !videoUrl.trim()}
-                className="flex-1 accent-gradient text-black px-3 py-1.5 rounded text-sm font-semibold hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-md"
+                className="flex-1 bg-amber text-charcoal px-3 py-1.5 rounded text-sm font-semibold hover:bg-amber-dark hover:scale-105 disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-md transition-all"
               >
                 {loading ? "..." : "Download"}
               </button>

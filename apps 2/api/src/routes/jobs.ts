@@ -135,20 +135,23 @@ export default async function jobRoutes(fastify: FastifyInstance) {
     const job = await updateJobStatus(fastify, id, body);
 
     // Emit WebSocket update
-    fastify.websocketServer.clients.forEach((client: any) => {
-      if (client.readyState === 1) {
-        // WebSocket.OPEN
-        client.send(
-          JSON.stringify({
-            type: "job_update",
-            jobId: id,
-            progress: body.progress,
-            status: body.status,
-            error: body.error,
-          })
-        );
-      }
-    });
+    const wsConnections = (fastify as any).wsConnections;
+    if (wsConnections) {
+      wsConnections.forEach((socket: any) => {
+        if (socket.readyState === 1) {
+          // WebSocket.OPEN
+          socket.send(
+            JSON.stringify({
+              type: "job_update",
+              jobId: id,
+              progress: body.progress,
+              status: body.status,
+              error: body.error,
+            })
+          );
+        }
+      });
+    }
 
     return job;
   });

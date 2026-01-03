@@ -56,7 +56,7 @@ export default function ProjectsPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen p-8 flex items-center justify-center pt-16 md:pt-20">
+      <main className="min-h-screen p-8 flex items-center justify-center pt-20 md:pt-24">
         <Card>
           <div className="text-center text-cream">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber mx-auto"></div>
@@ -69,7 +69,7 @@ export default function ProjectsPage() {
 
   if (error) {
     return (
-      <main className="min-h-screen p-8 flex items-center justify-center pt-16 md:pt-20">
+      <main className="min-h-screen p-8 flex items-center justify-center pt-20 md:pt-24">
         <div className="max-w-md w-full">
           <Card>
             <div className="bg-amber/20 border border-amber/50 text-amber p-4 rounded-lg mb-4">
@@ -85,14 +85,11 @@ export default function ProjectsPage() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden p-2 sm:p-4 flex flex-col relative pt-16 md:pt-20">
+    <main className="min-h-screen overflow-hidden p-2 sm:p-4 flex flex-col relative pt-20 md:pt-24">
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 animate-fade-in">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 animate-fade-in pt-8 md:pt-12">
             <div>
-              <Link href="/" className="text-xs text-text-muted hover:text-cream transition mb-1 inline-block">
-                ← Back to Home
-              </Link>
               <h1 className="font-serif text-3xl md:text-4xl font-bold text-cream mb-2">My Projects</h1>
               <p className="text-sm text-text-secondary">Manage your AI video projects</p>
             </div>

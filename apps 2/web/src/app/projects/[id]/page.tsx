@@ -53,9 +53,9 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-charcoal">
       {/* Header */}
-      <header className="h-12 flex-shrink-0 bg-charcoal-light/80 backdrop-blur-md border-b border-cream/10 text-cream px-4 flex items-center justify-between safe-top">
+      <header className="h-12 flex-shrink-0 bg-charcoal-light/80 backdrop-blur-md border-b border-cream/10 text-cream px-4 flex items-center justify-between z-10">
         <h1 className="font-serif text-sm font-bold truncate">{project.name}</h1>
         <Link
           href="/projects"

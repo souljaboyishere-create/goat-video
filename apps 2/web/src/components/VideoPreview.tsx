@@ -49,16 +49,38 @@ export default function VideoPreview({ timeline, jobs, selectedClipId, onClose }
           return;
         }
 
+        if (!activeJob.output?.filePath) {
+          setError("Video file path not available. The download may still be in progress.");
+          setLoading(false);
+          return;
+        }
+
+        const filePath = activeJob.output.filePath;
+        console.log("Fetching video URL for path:", filePath);
+
         const response = await fetch(
-          `${apiUrl}/api/media/url?path=${encodeURIComponent(activeJob.output.filePath)}`,
+          `${apiUrl}/api/media/url?path=${encodeURIComponent(filePath)}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        if (!response.ok) throw new Error("Failed to load");
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.error || `Failed to load video URL (${response.status})`;
+          console.error("Video URL fetch failed:", {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData,
+            filePath
+          });
+          throw new Error(errorMessage);
+        }
         const data = await response.json();
+        console.log("Video URL fetched successfully:", data.url);
         setVideoUrl(data.url);
-      } catch {
-        setError("Failed to load video");
+      } catch (err: any) {
+        console.error("Failed to fetch video URL:", err);
+        setError(err.message || "Failed to load video");
+        setLoading(false);
       } finally {
         setLoading(false);
       }
@@ -67,10 +89,15 @@ export default function VideoPreview({ timeline, jobs, selectedClipId, onClose }
     fetchVideoUrl();
   }, [activeClipId, activeJob]);
 
-  const handlePlayPause = useCallback(() => {
+  const handlePlayPause = useCallback(async () => {
     if (!videoRef.current) return;
     if (videoRef.current.paused) {
-      videoRef.current.play().catch(() => {});
+      try {
+        await videoRef.current.play();
+      } catch (err) {
+        console.error("Failed to play video:", err);
+        setError("Failed to play video. Please try again.");
+      }
     } else {
       videoRef.current.pause();
     }
@@ -128,8 +155,24 @@ export default function VideoPreview({ timeline, jobs, selectedClipId, onClose }
               onEnded={() => setIsPlaying(false)}
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
+              onError={(e) => {
+                console.error("Video playback error:", {
+                  error: e,
+                  videoUrl,
+                  videoElement: videoRef.current,
+                  networkState: videoRef.current?.networkState,
+                  readyState: videoRef.current?.readyState,
+                  errorCode: videoRef.current?.error?.code,
+                  errorMessage: videoRef.current?.error?.message
+                });
+                
+                const errorMessage = videoRef.current?.error?.message 
+                  || "Failed to load video file. This may be due to CORS or the file not being accessible.";
+                setError(errorMessage);
+              }}
               playsInline
               preload="metadata"
+              controls={false}
             >
               <source src={videoUrl} type="video/mp4" />
             </video>

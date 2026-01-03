@@ -1,4 +1,4 @@
-// File: /Users/cameronentezarian/Documents/video-ai-platform/apps/web/src/app/projects/page.tsx
+// File: /Users/cameronentezarian/Documents/GitHub/goat-video/apps 2/web/src/app/projects/page.tsx
 import * as entry from '../../../../src/app/projects/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
