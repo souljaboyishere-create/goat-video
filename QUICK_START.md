@@ -5,14 +5,29 @@ Fastest way to get the system running for testing.
 ## Prerequisites
 
 - Node.js 20+
-- pnpm (or npm)
-- Python 3.11+
-- Docker (for infrastructure services)
+- pnpm (or npm) - Install with `npm install -g pnpm`
+- Python 3.11+ (for workers)
+- Docker (for infrastructure services) - Optional, can use local services
+
+**Note:** This project is cross-platform compatible. Use PowerShell scripts on Windows and Bash scripts on macOS/Linux.
 
 ## 1. Start Infrastructure (Docker)
 
+**Windows (PowerShell):**
+```powershell
+# From project root
+.\scripts\start-infrastructure.ps1
+
+# Or manually:
+docker-compose up -d
+```
+
+**macOS/Linux (Bash):**
 ```bash
-cd /Users/cameronentezarian/Documents/video-ai-platform
+# From project root
+./scripts/start-infrastructure.sh
+
+# Or manually:
 docker-compose up -d
 ```
 
@@ -28,14 +43,36 @@ This starts:
 
 ## 2. Setup Backend
 
-```bash
-cd apps/api
+**Windows (PowerShell):**
+```powershell
+cd "apps 2\api"
 
 # Install dependencies
 pnpm install
 
-# Setup environment
-cp ../../.env.example .env
+# Setup environment (if .env.example exists)
+if (Test-Path ..\..\.env.example) {
+    Copy-Item ..\..\.env.example .env
+}
+# Edit .env with database URL: postgresql://videoai:videoai123@localhost:5432/video_ai_platform
+
+# Initialize database
+pnpm prisma:generate
+pnpm prisma:migrate dev --name init
+
+# Start backend
+pnpm dev
+```
+
+**macOS/Linux (Bash):**
+```bash
+cd "apps 2/api"
+
+# Install dependencies
+pnpm install
+
+# Setup environment (if .env.example exists)
+cp ../../.env.example .env 2>/dev/null || true
 # Edit .env with database URL: postgresql://videoai:videoai123@localhost:5432/video_ai_platform
 
 # Initialize database
@@ -50,8 +87,23 @@ Backend runs on http://localhost:3001
 
 ## 3. Setup Frontend
 
+**Windows (PowerShell):**
+```powershell
+cd "apps 2\web"
+
+# Install dependencies
+pnpm install
+
+# Setup environment
+"NEXT_PUBLIC_API_URL=http://localhost:3001" | Out-File -FilePath .env.local -Encoding utf8
+
+# Start frontend
+pnpm dev
+```
+
+**macOS/Linux (Bash):**
 ```bash
-cd apps/web
+cd "apps 2/web"
 
 # Install dependencies
 pnpm install
@@ -108,8 +160,15 @@ uvicorn src.main:app --host 0.0.0.0 --port 8000
 
 ## 5. Run E2E Test
 
+**Windows (PowerShell):**
+```powershell
+# From project root
+.\scripts\test-e2e.ps1
+```
+
+**macOS/Linux (Bash):**
 ```bash
-cd /Users/cameronentezarian/Documents/video-ai-platform
+# From project root
 ./test-e2e.sh
 ```
 
@@ -133,6 +192,19 @@ Open http://localhost:3000
 
 ### Services won't start
 
+**Windows (PowerShell):**
+```powershell
+# Check Docker
+docker ps
+
+# Check ports
+Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -eq 3001 -or $_.LocalPort -eq 3000 -or $_.LocalPort -eq 8000}
+
+# Or use the health check script
+.\scripts\check-services.ps1
+```
+
+**macOS/Linux (Bash):**
 ```bash
 # Check Docker
 docker ps
@@ -141,18 +213,38 @@ docker ps
 lsof -i :3001  # Backend
 lsof -i :3000  # Frontend
 lsof -i :8000  # Worker
+
+# Or use the health check script
+./scripts/check-services.sh
 ```
 
 ### Database errors
 
-```bash
+**Windows (PowerShell):**
+```powershell
 # Reset database
-cd apps/api
+cd "apps 2\api"
 pnpm prisma:migrate reset
 
 # Or recreate
+cd ..\..
 docker-compose down -v
 docker-compose up -d
+cd "apps 2\api"
+pnpm prisma:migrate dev
+```
+
+**macOS/Linux (Bash):**
+```bash
+# Reset database
+cd "apps 2/api"
+pnpm prisma:migrate reset
+
+# Or recreate
+cd ../..
+docker-compose down -v
+docker-compose up -d
+cd "apps 2/api"
 pnpm prisma:migrate dev
 ```
 
